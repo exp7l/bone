@@ -16,11 +16,7 @@ import {
 } from './provider.js';
 
 globalThis.onload = async function onLoad() {
-  if (!( typeof globalThis !== 'undefined' )) {
-    const message = 'ES2020 not supported, please update your browser to the latest version.';
-    alert(message);
-    throw new Error(message);
-  }
+  if (!( typeof globalThis !== 'undefined' )) throw new Error('ES2020 not supported, please update your browser.');
 
   let state = {};
   state = Object.assign(state, await requestConnection());
