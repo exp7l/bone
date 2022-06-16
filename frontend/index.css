@@ -27,10 +27,6 @@ th {
   justify-content: space-between;
 }
 
-output {
-  display: inline-block;
-}
-
 @keyframes spinner {
   to {
     transform: rotate(360deg);
