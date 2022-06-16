@@ -4,27 +4,6 @@ body {
   padding-right: 25%;
 }
 
-* {
-  color: #fdfdfd;
-  text-shadow: 0 0 2px #001716, 0 0 3px #03edf975, 0 0 5px #03edf975, 0 0 8px #03edf975;
-}
-
-button {
-  color: #f4eee4;
-  text-shadow: 0 0 2px #393a33, 0 0 8px #f39f0575, 0 0 2px #f39f0575;
-}
-
-h1 {
-  color: #f92aad;
-  text-shadow: 0 0 2px #100c0f, 0 0 5px #dc078e33, 0 0 10px #fff3;
-}
-
-h2,
-h3 {
-  color: #72f1b8;
-  text-shadow: 0 0 2px #100c0f, 0 0 10px #257c5575, 0 0 35px #21272475;
-}
-
 h1,
 h2,
 h3 {
@@ -34,11 +13,6 @@ h3 {
 td,
 th {
   text-align: center;
-}
-
-select, option {
-  background-color: black;
-  font-size: larger;
 }
 
 .flex {
