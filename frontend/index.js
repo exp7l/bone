@@ -15,29 +15,6 @@ import {
   requestAccounts,
 } from './provider.js';
 
-/*
-    # Questions
-
-    - Why are buy and sell not working?
-    - Why RC-DAI_ADDRESS rate wrong?
-    - Why gas estimation work sometimes sometimes not on metamask?
-    - Make the Detail button not the row clickable
-    - Break Detail into 2 rows
-    - How does XSS work?
-    - What does "use strict" do?
-    - How to make contracts read only for safety?
-    - How to do no connection only mode?
-    - How to design for the swap expericence? 2 trades between daiStableS
-
-    # Documentation
-
-    # Terminologies
-
-*/
-
-/*
-      # Main
-*/
 globalThis.onload = async function onLoad() {
   if (!isES2020Supported()) {
     const message = 'ES2020 not supported, please update your browser to the latest version.';
@@ -46,7 +23,7 @@ globalThis.onload = async function onLoad() {
   }
 
   let state = {};
-  state = Object.assign(state, await requireConnection());
+  state = Object.assign(state, await requestConnection());
   state = Object.assign(state, await fetchInputs());
 
   // FIX: Can we use Default Provider?
