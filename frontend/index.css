@@ -1,0 +1,83 @@
+body {
+  padding-top: 1%;
+  padding-left: 25%;
+  padding-right: 25%;
+}
+
+* {
+  color: #fdfdfd;
+  text-shadow: 0 0 2px #001716, 0 0 3px #03edf975, 0 0 5px #03edf975, 0 0 8px #03edf975;
+}
+
+button {
+  color: #f4eee4;
+  text-shadow: 0 0 2px #393a33, 0 0 8px #f39f0575, 0 0 2px #f39f0575;
+}
+
+h1 {
+  color: #f92aad;
+  text-shadow: 0 0 2px #100c0f, 0 0 5px #dc078e33, 0 0 10px #fff3;
+}
+
+h2,
+h3 {
+  color: #72f1b8;
+  text-shadow: 0 0 2px #100c0f, 0 0 10px #257c5575, 0 0 35px #21272475;
+}
+
+h1,
+h2,
+h3 {
+  padding-top: 2%;
+}
+
+td,
+th {
+  text-align: center;
+}
+
+select, option {
+  background-color: black;
+  font-size: larger;
+}
+
+.flex {
+  display: flex;
+  justify-content: space-between;
+}
+
+.swap-middle {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  justify-content: space-between;
+}
+
+output {
+  display: inline-block;
+}
+
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner::before {
+  content: "";
+  box-sizing: border-box;
+  position: static;
+  top: 50%;
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 3px solid #f6f;
+  border-top-color: #0e0;
+  border-right-color: #0dd;
+  border-bottom-color: #f90;
+  margin-top: -1px;
+  margin-left: -22px;
+  margin-right: 7px;
+  animation: spinner .6s linear infinite;
+}
