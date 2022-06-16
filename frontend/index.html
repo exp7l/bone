@@ -1,217 +1,86 @@
+
 <!DOCTYPE html>
-
 <html>
-
-<head>
+  <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="https://unpkg.com/terminal.css@0.7.2/dist/terminal.min.css" />
     <link rel="stylesheet" href="index.css">
     <script defer src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js"></script>
     <script src="index.js" type="module"></script>
-</head>
-
-<body>
-    <p>
+  </head>
+  <body>
+    <div>
+      <p>
         <button class="btn btn-default btn-ghost" id="button-wallet">CONNECT AND RELOAD</button>
-    </p>
-
-    <h1 id="h1-trade">1. Swap</h1>
-
-    <h2>1.1 Listing</h2>
-
-    <table>
-        <thead>
-            <tr>
-                <th>STABLECOIN SYMBOL</th>
-                <th>STABLECOIN BALANCE</th>
-                <th>STABLECOIN-DAI RATE</th>
-                <th>RESERVECOIN SYMBOL</th>
-                <th>RESERVECOIN BALANCE</th>
-                <th>RESERVECOIN-DAI BUY RATE</th>
-                <th>RESERVECOIN-DAI SELL RATE</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr id="dEUR"></tr>
-            <tr id="dJPY"></tr>
-            <tr id="dGBP"></tr>
-            <tr id="dCNY"></tr>
-            <tr id="dINR"></tr>
-            <tr id="dCHF"></tr>
-            <tr id="dBRL"></tr>
-            <tr id="dPHP"></tr>
-            <tr id="dXAU"></tr>
-            <tr id="dXAG"></tr>
-            <tr id="dWTI"></tr>
-        </tbody>
-    </table>
-
-    <h2>1.2 Wallet </h2>
-
-    <table>
-        <tbody>
-            <tr>
-                <th>ADDRESS</th>
-                <td><label id="label-address"></label></td>
-            </tr>
-            <tr>
-                <th>DAI BALANCE</th>
-                <td><label id="label-balance"></label></td>
-            </tr>
-            <tr>
-                <th>CHAIN ID</th>
-                <td><label id="label-chainid"></label></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h2> 1.3 Stablecoin </h2>
-
+      </p>
+    </div>
+    <div>
+      <h1>Wallet</h1>
+    </div>
     <div id="stablecoin">
-        <h3>1.3.1 Stablecoin Trade</h3>
-        <fieldset>
-            <div class="flex">
-                <div class="form-group">
-                    <select id="base-symbol" name="base-symbol">
-                        <option>dEUR</option>
-                        <option>dJPY</option>
-                        <option>dGBP</option>
-                        <option>dCNY</option>
-                        <option>dINR</option>
-                        <option>dCHF</option>
-                        <option>dBRL</option>
-                        <option>dPHP</option>
-                        <option>dXAU</option>
-                        <option>dXAG</option>
-                        <option>dWTI</option>
-                        <option>DAI</option>
-                    </select>
-                    <input id="base-amount" type="number" placeholder="BASE" value="1" min="0">
-                </div>
-                <div class="swap-middle">
-                    <button id="button-start-transaction" class="btn btn-default btn-ghost">TRADE</button>
-                    <b id="quote-rate">RATE</b>
-                </div>
-                <div class="form-group">
-                    <select id="quote-symbol" name="quote-symbol">
-                        <option>dJPY</option>
-                        <option>dEUR</option>
-                        <option>dGBP</option>
-                        <option>dCNY</option>
-                        <option>dINR</option>
-                        <option>dCHF</option>
-                        <option>dBRL</option>
-                        <option>dPHP</option>
-                        <option>dXAU</option>
-                        <option>dXAG</option>
-                        <option>dWTI</option>
-                        <option>DAI</option>
-                    </select>
-                    <input id="quote-amount" type="number" placeholder="QUOTE" readonly>
-                </div>
-            </div>
-        </fieldset>
+      <h1>Swap</h1>
+      <fieldset>
+        <div class="flex">
+          <div class="form-group">
+            <select id="base-symbol" name="base-symbol">
+              <option>dEUR</option>
+              <option>dJPY</option>
+              <option>dGBP</option>
+              <option>dCNY</option>
+              <option>dINR</option>
+              <option>dCHF</option>
+              <option>dBRL</option>
+              <option>dPHP</option>
+              <option>dXAU</option>
+              <option>dXAG</option>
+              <option>dWTI</option>
+              <option>DAI</option>
+            </select>
+            <input id="base-amount" type="number" placeholder="BASE" value="1" min="0">
+          </div>
+          <div class="swap-middle">
+            <button id="button-start-transaction" class="btn btn-default btn-ghost">TRADE</button>
+            <b id="quote-rate">RATE</b>
+          </div>
+          <div class="form-group">
+            <select id="quote-symbol" name="quote-symbol">
+              <option>dJPY</option>
+              <option>dEUR</option>
+              <option>dGBP</option>
+              <option>dCNY</option>
+              <option>dINR</option>
+              <option>dCHF</option>
+              <option>dBRL</option>
+              <option>dPHP</option>
+              <option>dXAU</option>
+              <option>dXAG</option>
+              <option>dWTI</option>
+              <option>DAI</option>
+            </select>
+            <input id="quote-amount" type="number" placeholder="QUOTE" readonly>
+          </div>
+        </div>
+      </fieldset>
     </div>
-    <div id="stablecoin-detail-base">
-        <h3>1.3.2 Stablecoin Base Asset</h3>
-    </div>
-    <div id="stablecoin-detail-quote">
-        <h3>1.3.3 Stablecoin Quote Asset</h3>
-    </div>
-
-    <h2>1.4 Rightcoin</h2>
-
-    <div id="rightcoin">
-        <h3>1.4.1 Rightcoin Trade</h3>
-        <fieldset>
-            <div class="flex">
-                <div class="form-group">
-                    <select id="rightcoin-base-symbol" name="base-symbol">
-                        <option>dEUR</option>
-                        <option>dJPY</option>
-                        <option>dGBP</option>
-                        <option>dCNY</option>
-                        <option>dINR</option>
-                        <option>dCHF</option>
-                        <option>dBRL</option>
-                        <option>dPHP</option>
-                        <option>dXAU</option>
-                        <option>dXAG</option>
-                        <option>dWTI</option>
-                        <option>DAI</option>
-                    </select>
-                    <input id="rightcoin-base-amount" type="number" placeholder="BASE" value="1" min="0">
-                </div>
-                <div class="swap-middle">
-                    <button id="rightcoin-button-start-transaction" class="btn btn-default btn-ghost">TRADE</button>
-                    <b id="rightcoin-quote-rate">RATE</b>
-                </div>
-                <div class="form-group">
-                    <select id="rightcoin-quote-symbol" name="quote-symbol">
-                        <option>dJPY</option>
-                        <option>dEUR</option>
-                        <option>dGBP</option>
-                        <option>dCNY</option>
-                        <option>dINR</option>
-                        <option>dCHF</option>
-                        <option>dBRL</option>
-                        <option>dPHP</option>
-                        <option>dXAU</option>
-                        <option>dXAG</option>
-                        <option>dWTI</option>
-                        <option>DAI</option>
-                    </select>
-                    <input id="rightcoin-quote-amount" type="number" placeholder="QUOTE" readonly>
-                </div>
-            </div>
-        </fieldset>
-    </div>
-    <div id="rightcoin-detail-base">
-        <h3>1.4.2 Right Coin Base Asset</h3>
-    </div>
-    <div id="rightcoin-detail-quote">
-        <h3>1.4.3 Right Coin Quote Asset</h3>
-    </div>
-
-    <h1>2. Getting Started</h1>
-
-    <p>
+    <div id="doc">
+      <h1>Getting Started</h1>
+      <p>
         To make a trade, you need to sign upto 2 transactions.
-    <ol>
-        <li>Invoke the <code>From Contract</code>'s <code>approve</code> to approve the <code>To Contract</code>
+        <ol>
+          <li>Invoke the <code>From Contract</code>'s <code>approve</code> to approve the <code>To Contract</code>
             an allowance (an amount of your choosing) for transfer, if you haven't already approved.</li>
-        <li>Invoke the <code>To Contract</code>'s <code>buy</code> with the correct amount of From stablecoins
+          <li>Invoke the <code>To Contract</code>'s <code>buy</code> with the correct amount of From stablecoins
             and
             To
             stablecoins to make the trade.</li>
-    </ol>
-    </p>
-
-    <h1>3. Motivation</h1>
-
-    ...
-
-    <h1>4. Design</h1>
-
-    <h2>4.1 Rate Sourcing</h2>
-
-    <p>
-        Source: <a
-            href="https://data.chain.link/ethereum/mainnet/fiat">https://data.chain.link/ethereum/mainnet/fiat</a>
-    </p>
-    <p>
-        The system currently sources FX rates from Chainlink oracles. This implies there is significant
-        difference
-        in
-        1) the frequncy the rates update and 2) the deviation when compared to real-world FX rates.
-        In particular, most pairs only update rate when there is 0.15%+ rate change or 24 hours after last
-        price update. One of the reasons being lowering gas cost.
-    </p>
-
-    <h2>4.2 Commission</h2>
-
-    <p>0.3% for all pairs per trade.</p>
-
-</body>
-
+        </ol>
+      </p>
+    </div>
+    <div>
+      <h1>Why? TODO</h1>
+    </div>
+    <div>
+      <h1>How? TODO</h1>
+    </div>
+  </body>
 </html>
