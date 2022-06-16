@@ -1,18 +1,10 @@
 {
   "devDependencies": {
-    "@nomiclabs/hardhat-ethers": "^2.0.5",
-    "csvtojson": "^2.0.10",
-    "hardhat": "^2.9.3",
     "http-server": "^14.1.0"
   },
   "scripts": {
-    "start-chain": "npm run fresh-chain && npx hardhat stealDai --network localhost",
-    "fresh-chain": "npx hardhat node & sleep 5",
-    "stop-chain": "pkill -f hardhat",
-    "restart-chain": "npm run stop-chain; npm run start-chain",
     "web-server": "http-server -c-1",
-    "stop-server": "pkill -f http-server",
-    "restart-server": "npm run stop-server; npm run web-server"
+    "stop-server": "pkill -f http-server"
   },
   "dependencies": {
     "ethers": "^5.6.5"
