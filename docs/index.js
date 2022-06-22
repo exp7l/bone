@@ -36,6 +36,10 @@ function readable(bn) {
   return `${quotient}.${remainder}`
 }
 
+function writeable(real) {
+  return ethers.BigNumber.from(real).mul(ethers.constants.WeiPerEther)  ;
+}
+
 function contracts({
   daiABI,
   bmwABI,
@@ -52,13 +56,15 @@ function contracts({
 
 async function assetData(contract, dai, signerAddress) {
   return {
-    "Your Balance              ": readable(await contract.balanceOf(signerAddress)),
-    "Total Supply              ": readable(await contract.totalSupply()),
-    "Mint Price           (DAI)": readable(await contract.mintPrice()),
-    "Redemption Price     (DAI)": readable(await contract.redemptionPrice()),
-    "Liability            (DAI)": readable(await contract.liability()),
-    "C-Ratio Floor   (multiple)": readable(await contract.cratioFloor()),
-    "DAI Approved         (DAI)": readable(await dai.allowance(signerAddress, contract.address)),
+    "Your Balance                 ": readable(await contract.balanceOf(signerAddress)),
+    "Total Supply                 ": readable(await contract.totalSupply()),
+    "Mint Price              (DAI)": readable(await contract.mintPrice()),
+    "Redemption Price        (DAI)": readable(await contract.redemptionPrice()),
+    "Liability               (DAI)": readable(await contract.liability()),
+    "Mint C-Ratio Floor (multiple)": readable(await contract.cratioFloor()),
+    "DAI Approved            (DAI)": readable(await dai.allowance(signerAddress, contract.address)),
+    "Fee                       (%)": readable(await contract.fee()),
+    "address                      ": contract.address
   }
 }
 
@@ -90,19 +96,22 @@ globalThis.onload = async function onLoad() {
     ), null, '\t')
   
   await renderAsset()
-
+  console.log(state)
   d.querySelector("pre#reserve").textContent = JSON.stringify({
-    "Your Balance               ": readable(await state.BMW.balanceOf(state.signerAddress)),
-    "Mint Price            (DAI)": readable(await state.BMW.mintPrice()),
-    "Redemption Price      (DAI)": readable(await state.BMW.redemptionPrice()),
-    "Global C-Ratio   (multiple)": readable(await state.BMW.cratio()),
-    "Global Reserve        (DAI)": readable(await state.BMW.reserve()),
-    "Global Liablity       (DAI)": readable(await state.BMW.liability()),
-    "Global Equity         (DAI)": readable(await state.BMW.equity()),
-    "Global Dividend       (DAI)": readable((await state.BMW.equity()).sub(await state.BMW.totalSupply())),
-    "Fee                     (%)": readable(await state.BMW.fee()),
-    "BMW Supply                 ": readable(await state.BMW.totalSupply()),
-    "Approved Assets            ": [ await state.BMW.synths(0) ],
+    "Your Balance                       ": readable(await state.BMW.balanceOf(state.signerAddress)),
+    "Mint Price                    (DAI)": readable(await state.BMW.mintPrice()),
+    "Redemption Price              (DAI)": readable(await state.BMW.redemptionPrice()),
+    "Redemption C-Ratio floor (multiple)": readable(await state.BMW.cratioFloor()),
+    "Global C-Ratio           (multiple)": readable(await state.BMW.cratio()),    
+    "Global Reserve                (DAI)": readable(await state.BMW.reserve()),
+    "Global Liablity               (DAI)": readable(await state.BMW.liability()),
+    "Global Equity                 (DAI)": readable(await state.BMW.equity()),
+    "Global Retailed Earning       (DAI)": readable((await state.BMW.equity()).sub(await state.BMW.totalSupply())),
+    "Fee                             (%)": readable(await state.BMW.fee()),
+    "BMW Supply                         ": readable(await state.BMW.totalSupply()),
+    "address                            ": state.BMW.address,
+    // FIXME: make sure asset is deployed.
+    "Approved Assets                    ": [ await state.BMW.synths(0) ],    
   }, null, '\t')
 
   d.querySelector("select#picker").onchange = async () => await renderAsset()
@@ -110,7 +119,7 @@ globalThis.onload = async function onLoad() {
   d.querySelector("button#mint").onclick = async () => {
     const asset    = d.querySelector("select#picker").value    
     const quantity = d.querySelector("input#quantity").value
-    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const wad      = writeable(quantity)
     const response  = await state[asset].mint(wad)
     console.log(await response.wait())
   }
@@ -118,7 +127,7 @@ globalThis.onload = async function onLoad() {
   d.querySelector("button#redeem").onclick = async () => {
     const asset    = d.querySelector("select#picker").value
     const quantity = d.querySelector("input#quantity").value
-    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const wad      = writeable(quantity)
     const response  = await state[asset].redeem(wad)
     console.log(await response.wait())    
   }
@@ -126,28 +135,28 @@ globalThis.onload = async function onLoad() {
   d.querySelector("button#approve").onclick = async () => {
     const asset    = d.querySelector("select#picker").value
     const quantity = d.querySelector("input#quantity").value
-    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const wad      = writeable(quantity)
     const response = await state.DAI.approve(state.addressBook[asset], wad)
     console.log(await response.wait())
   }
 
   d.querySelector("button#r-mint").onclick = async () => {
     const quantity = d.querySelector("input#r-quantity").value
-    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const wad      = writeable(quantity)
     const response  = await state.BMW.mint(wad)
     console.log(await response.wait())
   }
 
   d.querySelector("button#r-redeem").onclick = async () => {
     const quantity = d.querySelector("input#r-quantity").value
-    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const wad      = writeable(quantity)
     const response  = await state.BMW.redeem(wad)
     console.log(await response.wait())
   }
 
   d.querySelector("button#r-approve").onclick = async () => {
     const quantity = d.querySelector("input#r-quantity").value
-    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const wad      = writeable(quantity)
     const response = await state.DAI.approve(state.addressBook['BMW'], wad)
     console.log(await response.wait())
   }

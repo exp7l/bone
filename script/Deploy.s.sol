@@ -16,6 +16,5 @@ contract S is Script {
 	BXAU bxau      = new BXAU(bmw, xauusd, daiusd, dai);
 	vm.stopBroadcast();
         vm.broadcast();
-        bmw.pushSynth(address(bxau2));
     }
 }

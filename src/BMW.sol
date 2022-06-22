@@ -4,14 +4,14 @@ pragma solidity 0.8.13;
 import "./Math.sol";
 import "./ERC20.sol";
 import "./IERC20Synth.sol";
-import "forge-std/console.sol";
 
 contract BMW is ERC20("Bone Marrow", "BMW", 18), Math {
     ERC20         public immutable dai;
     IERC20Synth[] public           synths;
-    uint          public constant  priceFloor  = 1e18;
-    uint          public constant  fee         = 0.003 * 1e18;
-    uint          public           cratioFloor = 1.2 * 1e18;
+    address       public           ownerTestnet;
+    uint          public constant  priceFloor   = 1e18;
+    uint          public constant  fee          = 0.003 * 1e18;
+    uint          public           cratioFloor  = 2 * 1e18;
 
     error Cratio();
     event         Mint(address indexed guy, uint wad);
@@ -19,7 +19,8 @@ contract BMW is ERC20("Bone Marrow", "BMW", 18), Math {
 
     constructor(address _dai)
     {
-	dai     = ERC20(_dai);
+	dai            = ERC20(_dai);
+	ownerTestnet   = msg.sender;
     }
 
     function equityPerToken()
@@ -91,11 +92,9 @@ contract BMW is ERC20("Bone Marrow", "BMW", 18), Math {
         public
 	returns (bool)
     {
-        console.log("start");
+        if (!(msg.sender == ownerTestnet)) revert("On testnet, only owner can approve new asset.");
         synths.push(IERC20Synth(_synth));
-	console.log("2");
 	dai.approve(_synth, type(uint).max);
-	console.log("3");
 	return true;
     }
 
@@ -103,22 +102,11 @@ contract BMW is ERC20("Bone Marrow", "BMW", 18), Math {
         public
 	returns (bool)
     {
-        console.log("mint start");
         uint total            = wmul(wmul(_wad, mintPrice()), WAD + fee);
-	console.log(msg.sender);
-	console.log(address(this));
-	console.log(total);
-	console.log(_wad);
-	console.log(dai.balanceOf(msg.sender));
-	bool status = dai.transferFrom(msg.sender, address(this), total);
-	console.log(status);
-	console.log("3");
+	dai.transferFrom(msg.sender, address(this), total);
 	balanceOf[msg.sender] = balanceOf[msg.sender] + _wad;
-	console.log("4");
         totalSupply           = totalSupply           + _wad;
-	console.log("5");
 	emit                    Mint(msg.sender, _wad);
-	console.log("6");
 	return                  true;
     }
 

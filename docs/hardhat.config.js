@@ -1,7 +1,7 @@
 require("@nomiclabs/hardhat-ethers")
 
 const fs         = require("fs")
-const daiABI     = fs.readFileSync("./configs/DAI.json", "utf8")
+const daiABI     = fs.readFileSync("./DAI.json", "utf8")
 const curve      = "0xbebc44782c7db0a1a60cb6fe97d0b483032ff1c7"
 const dai        = "0x6b175474e89094c44da98b954eedeac495271d0f"
 const eoa        = "0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199"
