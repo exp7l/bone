@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "../src/BMXAU.sol";
-import "../src/BXAU.sol";
+import "../src/BMW.sol";
+import "../src/Synth.sol";
 import "../src/Math.sol";
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -14,8 +14,7 @@ contract ContractTest is Test, Math {
     ERC20   daiObj;
     address xauusd;
     address daiusd;
-    BMXAU   bmxau;
-    BXAU    bxau;
+    BMW     bmw;
     error   Cratio();
     error   NSF();
     
@@ -28,8 +27,7 @@ contract ContractTest is Test, Math {
 	daiusd = 0xAed0c38402a5d19df6E4c03F4E2DceD6e29c1ee9;
 	
         vm.prank(test0);
-        bmxau    = new BMXAU(xauusd, daiusd, dai);
-	bxau     = bmxau.bxau();
+        bmw    = new BMW(dai);
 	
 	vm.prank(rich);
 	daiObj.transfer(test0, 20_000_000 * WAD);
@@ -37,77 +35,90 @@ contract ContractTest is Test, Math {
         vm.startPrank(test0);
     }
 
-    function testMintRC()
-    	public
+    function testMintBMW()
+	public
     {
-        uint obal = daiObj.balanceOf(test0);
-        daiObj.approve(address(bmxau), 110 * WAD);
-	bmxau.mint(100 * WAD);
-	assertEq(bmxau.balanceOf(test0), 100 * WAD);
-	uint nbal = daiObj.balanceOf(test0);
-	assertEq(nbal, obal - wmul(100 * WAD, WAD + bmxau.fee()));
-	assertEq(bmxau.totalSupply(), 100 * WAD);
+        uint oldBalance = daiObj.balanceOf(test0);
+        daiObj.approve(address(bmw), 200 * WAD);
+	bmw.mint(100 * WAD);
+	assertEq(bmw.balanceOf(test0), 100 * WAD);
+	assertEq(daiObj.balanceOf(test0), oldBalance - wmul(100 * WAD, WAD + bmw.fee()));
     }
 
-    function testRedeemRC()
+    function testRedeemBMW()
         public
     {
-        testMintRC();
-        uint obal = daiObj.balanceOf(test0);
-	bmxau.redeem(100 * WAD);
-	assertEq(bmxau.balanceOf(test0), 0);
-	assertEq(daiObj.balanceOf(test0), obal + wmul(101 * WAD, WAD - bmxau.fee()));	
+        testMintBMW();
+        uint oldBalance = daiObj.balanceOf(test0);
+	uint preFee     = wmul(40 * WAD, bmw.redemptionPrice());
+	uint expected   = wmul(preFee, WAD - bmw.fee());
+	bmw.redeem(40 * WAD);
+	assertEq(bmw.balanceOf(test0), 60 * WAD);
+	uint diff = daiObj.balanceOf(test0) - oldBalance;
+	assertEq(diff, expected);
     }
 
-    function testMintSC()
+    function testMintXAU()
         public
+	returns (Synth)
     {
-        testMintRC();
-        uint obal = daiObj.balanceOf(test0);
+        testMintBMW();
+	Synth bxau      = new Synth(
+            bmw, xauusd, daiusd, dai, 0.01 * 1e18, 1.1 * 1e18, "Bone Gold", "BXAU"
+	);
+	bmw.pushSynth(address(bxau));
 	daiObj.approve(address(bxau), type(uint).max);
+        uint oldBalance = daiObj.balanceOf(test0);
         bxau.mint(0.01 * 1e18);
 	assertEq(bxau.balanceOf(test0), 0.01 * 1e18);
-	assertEq(daiObj.balanceOf(test0), obal - wmul(bxau.price(), wmul(0.01 * 1e18, WAD + bxau.fee())));
+	uint diff       = oldBalance - daiObj.balanceOf(test0);
+	uint expected   = wmul(bxau.mintPrice(), wmul(0.01 * 1e18, WAD + bxau.fee()));
+	assertEq(diff, expected);
+	return bxau;
     }
 
-    function testCannotMintSCWhenNSF()
+    function testRedeemXAU()
+	public
+    {
+        Synth bxau      = testMintXAU();
+        uint oldBalance = daiObj.balanceOf(test0);
+	bxau.redeem(0.01 * 1e18);
+	assertEq(bxau.balanceOf(test0), 0);
+	uint diff       = daiObj.balanceOf(test0) - oldBalance;
+	uint expected   = wmul(bxau.redemptionPrice(), wmul(0.01 * 1e18, WAD - bxau.fee()));
+	assertEq(diff, expected);
+    }
+
+    function testCannotMintXAUNSF()
         public
     {
-        testMintRC();
-        daiObj.transfer(test0, daiObj.balanceOf(test0));
-        vm.expectRevert(NSF.selector);
+        testMintBMW();
+	Synth bxau = new Synth(
+            bmw, xauusd, daiusd, dai, 0.01 * 1e18, 110 * 1e18, "Bone Gold", "BXAU"
+	);
+        vm.expectRevert(bytes("Dai/insufficient-allowance"));
         bxau.mint(0.01 * 1e18);
     }
 
-    function testCannotMintSCWhenEmptyReserve()
+    function testCannotMintEmptyReserve()
         public
     {
-    	daiObj.approve(address(bxau), type(uint).max);
+    	Synth bxau = new Synth(
+            bmw, xauusd, daiusd, dai, 0.01 * 1e18, 110 * 1e18, "Bone Gold", "BXAU"
+	);
+	daiObj.approve(address(bxau), type(uint).max);
 	vm.expectRevert(Cratio.selector);
         bxau.mint(1000 * 1e18);
-
       	daiObj.approve(address(bxau), 0);
 	vm.expectRevert(Cratio.selector);
         bxau.mint(1000 * 1e18);
     }
 
-    function testCannotMintSCWhenBreachingCRatio()
+    function testCannotMintWhenBreachingCRatio()
         public
     {
-        testMintRC();
-        uint obal = daiObj.balanceOf(test0);
-	daiObj.approve(address(bxau), type(uint).max);
+        Synth bxau = testMintXAU();
 	vm.expectRevert(Cratio.selector);
         bxau.mint(1000 * 1e18);
-    }
-
-    function testRedeemSC()
-    	public
-    {
-	testMintSC();
-        uint obal = daiObj.balanceOf(test0);
-	bxau.redeem(0.01 * 1e18);
-        assertEq(bxau.balanceOf(test0), 0);
-	assertEq(daiObj.balanceOf(test0), obal + wmul(bxau.price(), wmul(0.01 * 1e18, WAD - bxau.fee())));
     }
 }

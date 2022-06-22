@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
+// Credit: https://github.com/dapphub/ds-math/blob/master/src/math.sol
 pragma solidity 0.8.13;
 
 contract Math {
@@ -38,5 +39,3 @@ contract Math {
         z = (x * WAD + y / 2) / y;
     }
 }
-
-// Credit: https://github.com/dapphub/ds-math/blob/master/src/math.sol

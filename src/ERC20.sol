@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
+// Credit: https://github.com/dapphub/ds-token/blob/master/src/token.sol
 pragma solidity 0.8.13;
 
-contract ERC20 {
+import "./IERC20.sol";
+
+contract ERC20 is IERC20 {
     uint256                                           public totalSupply;
     mapping (address => uint256)                      public balanceOf;
     mapping (address => mapping (address => uint256)) public allowance;
     string                                            public name;
     string                                            public symbol;
     uint8                                             public decimals;
-
-    event Approval  (address indexed src, address indexed guy, uint wad);
-    event Transfer  (address indexed src, address indexed dst, uint wad);
-    event Mint      (uint wad, address indexed dst);
-    event Redemption(uint wad, address indexed dst);
-
-    error NSF();
 
     constructor(string memory _name, string memory _symbol, uint8 _decimals) {
         name     = _name;
@@ -34,7 +30,7 @@ contract ERC20 {
         returns (bool)
     {
         if (_src != msg.sender  && allowance[_src][msg.sender] != type(uint).max) {
-            if (allowance[_src][msg.sender] < _wad) revert NSF();
+            if (allowance[_src][msg.sender] < _wad) revert NSA();
             allowance[_src][msg.sender] = allowance[_src][msg.sender] - _wad;
         }
         if (balanceOf[_src] < _wad) revert NSF();
@@ -54,5 +50,4 @@ contract ERC20 {
         return true;
     }
 }
-// Credit
-// - https://github.com/dapphub/ds-token/blob/master/src/token.sol
+

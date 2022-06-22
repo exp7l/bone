@@ -1,51 +1,160 @@
-import isES2020Supported from './compatibility.js';
-import fetchInputs from './fetch.js';
-import contracts from './contract-init.js';
+const { ethers } = globalThis
+const provider   = new ethers.providers.Web3Provider(globalThis.ethereum, 'any')
+const d          = document
 
-import {
-  drawRoot,
-} from './draw.js';
+async function getConf() {
+  const responses = await Promise.all(
+    [
+      fetch('DAI.json'),
+      fetch('BMW.json'),
+      fetch('BXAU.json'),
+      fetch('address-book-1337.json')
+    ]
+  )
+  const [
+    daiABI,
+    bmwABI,
+    bxauABI,
+    addressBook
+  ] = await Promise.all(
+    responses.map(resp => resp.json())
+  )
+  return { daiABI, bmwABI, bxauABI, addressBook }
+}
 
-import {
-  registerRoot,
-} from './handlers.js';
+async function getConn() {
+  const network       = await provider.getNetwork()
+  if (![ 31337, 4, 1 ].includes(network.chainId)) throw new Error('Network not supported.')
+  const signer        = provider.getSigner()
+  const signerAddress = await signer.getAddress(0)
+  return { signer, signerAddress, network, }
+}
 
-import {
-  requireConnection,
-  requestAccounts,
-} from './provider.js';
+function readable(bn) {
+  const quotient  = bn.div(ethers.constants.WeiPerEther).toString()
+  const remainder = bn.mod(ethers.constants.WeiPerEther).toString()
+  return `${quotient}.${remainder}`
+}
+
+function contracts({
+  daiABI,
+  bmwABI,
+  bxauABI,
+  signer,
+  addressBook: {DAI, BMW, BXAU}
+}) {
+  return {
+    "DAI":  new ethers.Contract(DAI,  daiABI,  signer),
+    "BMW":  new ethers.Contract(BMW,  bmwABI,  signer),
+    "BXAU": new ethers.Contract(BXAU, bxauABI, signer)
+  }
+}
+
+async function assetData(contract, dai, signerAddress) {
+  return {
+    "Your Balance              ": readable(await contract.balanceOf(signerAddress)),
+    "Total Supply              ": readable(await contract.totalSupply()),
+    "Mint Price           (DAI)": readable(await contract.mintPrice()),
+    "Redemption Price     (DAI)": readable(await contract.redemptionPrice()),
+    "Liability            (DAI)": readable(await contract.liability()),
+    "C-Ratio Floor   (multiple)": readable(await contract.cratioFloor()),
+    "DAI Approved         (DAI)": readable(await dai.allowance(signerAddress, contract.address)),
+  }
+}
 
 globalThis.onload = async function onLoad() {
-  if (!( typeof globalThis !== 'undefined' )) throw new Error('ES2020 not supported, please update your browser.');
+  if (!( typeof globalThis !== 'undefined' )) {
+    throw new Error("Browser doesn't support ES2020.")
+  }
+  
+  await provider.send('eth_requestAccounts', [])
+  
+  let state = {provider}
+  state = Object.assign(state, await getConn())
+  state = Object.assign(state, await getConf())
+  state = Object.assign(state, contracts(state))
+  
+  d.querySelector("pre#conn").textContent = JSON.stringify({
+    ...state.network,
+    ...state.provider.connection,
+    pollingInterval: state.provider._pollingInterval,
+    signerAddress:   state.signerAddress,
+    daiBalace:       readable(await state.DAI.balanceOf(state.signerAddress))
+  }, null, '\t')
+  
+  const renderAsset = async () => d.querySelector("pre#asset").textContent = JSON.stringify(
+    await assetData(
+      state[d.querySelector("select#picker").value],
+      state.DAI,
+      state.signerAddress
+    ), null, '\t')
+  
+  await renderAsset()
 
-  let state = {};
-  state = Object.assign(state, await requestConnection());
-  state = Object.assign(state, await fetchInputs());
+  d.querySelector("pre#reserve").textContent = JSON.stringify({
+    "Your Balance               ": readable(await state.BMW.balanceOf(state.signerAddress)),
+    "Mint Price            (DAI)": readable(await state.BMW.mintPrice()),
+    "Redemption Price      (DAI)": readable(await state.BMW.redemptionPrice()),
+    "Global C-Ratio   (multiple)": readable(await state.BMW.cratio()),
+    "Global Reserve        (DAI)": readable(await state.BMW.reserve()),
+    "Global Liablity       (DAI)": readable(await state.BMW.liability()),
+    "Global Equity         (DAI)": readable(await state.BMW.equity()),
+    "Global Dividend       (DAI)": readable((await state.BMW.equity()).sub(await state.BMW.totalSupply())),
+    "Fee                     (%)": readable(await state.BMW.fee()),
+    "BMW Supply                 ": readable(await state.BMW.totalSupply()),
+    "Approved Assets            ": [ await state.BMW.synths(0) ],
+  }, null, '\t')
 
-  // FIX: Can we use Default Provider?
-  state = Object.assign(state, contracts(state));
+  d.querySelector("select#picker").onchange = async () => await renderAsset()
 
-  // Make state hierarchical for simplier queries.
-  state = {
-    address: {
-      signerAddress: state.signerAddress,
-    },
-    stableIDs: state.stableIDs,
-    ethers: {
-      provider: state.provider,
-      signer: state.signer,
-      requestAccounts,
-    },
-    contract: {
-      stables: state.stables,
-      rights: state.rights,
-      stablesRO: state.stablesRO,
-      rightsRO: state.rightsRO,
-      dai: state.dai,
-    },
-    network: state.network,
-  };
+  d.querySelector("button#mint").onclick = async () => {
+    const asset    = d.querySelector("select#picker").value    
+    const quantity = d.querySelector("input#quantity").value
+    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const response  = await state[asset].mint(wad)
+    console.log(await response.wait())
+  }
 
-  registerRoot(state);
-  drawRoot(state);
-};
+  d.querySelector("button#redeem").onclick = async () => {
+    const asset    = d.querySelector("select#picker").value
+    const quantity = d.querySelector("input#quantity").value
+    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const response  = await state[asset].redeem(wad)
+    console.log(await response.wait())    
+  }
+
+  d.querySelector("button#approve").onclick = async () => {
+    const asset    = d.querySelector("select#picker").value
+    const quantity = d.querySelector("input#quantity").value
+    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const response = await state.DAI.approve(state.addressBook[asset], wad)
+    console.log(await response.wait())
+  }
+
+  d.querySelector("button#r-mint").onclick = async () => {
+    const quantity = d.querySelector("input#r-quantity").value
+    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const response  = await state.BMW.mint(wad)
+    console.log(await response.wait())
+  }
+
+  d.querySelector("button#r-redeem").onclick = async () => {
+    const quantity = d.querySelector("input#r-quantity").value
+    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const response  = await state.BMW.redeem(wad)
+    console.log(await response.wait())
+  }
+
+  d.querySelector("button#r-approve").onclick = async () => {
+    const quantity = d.querySelector("input#r-quantity").value
+    const wad      = ethers.BigNumber.from(quantity).mul(ethers.constants.WeiPerEther)
+    const response = await state.DAI.approve(state.addressBook['BMW'], wad)
+    console.log(await response.wait())
+  }
+
+  d.querySelector("button#push").onclick = async () => {
+    const address  = d.querySelector("input#addr").value
+    const response = await state.BMW.pushSynth(address)
+    console.log(await response.wait())
+  }
+}
